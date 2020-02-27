@@ -14,13 +14,16 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- task: ReplaceTokens@1
+- task: replacetokens@3
   inputs:
-    sourcePath: 'src/main/resources'
-    filePattern: '*.properties'
-    tokenRegex: '__(\w+[.\w+]*)__'
-
-
+    rootDirectory: 'src/main/resources'
+    targetFiles: '*.properties'
+    encoding: 'auto'
+    writeBOM: true
+    actionOnMissing: 'warn'
+    keepToken: false
+    tokenPrefix: '#{'
+    tokenSuffix: '}#'
 
 - task: Maven@3
   inputs:
