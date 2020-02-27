@@ -3,6 +3,10 @@
 # Add steps that analyze code, save build artifacts, deploy, and more:
 # https://docs.microsoft.com/azure/devops/pipelines/languages/java
 
+# Set variables once
+variables:
+  svc.name.k8s.namespace: mysql.development
+
 trigger:
 - master
 
@@ -10,6 +14,11 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
+- task: ReplaceTokens@1
+  inputs:
+    sourcePath: 'src/main/resources'
+    filePattern: '*.properties'
+    tokenRegex: '__(\w+[.\w+]*)__'
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
@@ -20,3 +29,19 @@ steps:
     publishJUnitResults: true
     testResultsFiles: '**/surefire-reports/TEST-*.xml'
     goals: 'package'
+
+- task: CopyFiles@2
+  inputs:
+    SourceFolder: '$(system.defaultworkingdirectory)'
+    Contents: |
+      **/*.jar
+      **/*.yaml
+    TargetFolder: '$(build.artifactsstagingdirectory)'
+
+- task: DockerCompose@0
+  inputs:
+    containerregistrytype: 'Azure Container Registry'
+    azureSubscription: 'DevOps(a76f26df-c81c-4fd6-b976-ba04f91c777a)'
+    azureContainerRegistry: '{"loginServer":"nvpdevopsaks.azurecr.io", "id" : "/subscriptions/a76f26df-c81c-4fd6-b976-ba04f91c777a/resourceGroups/nvp-devops-aks-rg/providers/Microsoft.ContainerRegistry/registries/nvpdevopsaks"}'
+    dockerComposeFile: '**/docker-compose.yml'
+    action: 'Run a Docker Compose command'
