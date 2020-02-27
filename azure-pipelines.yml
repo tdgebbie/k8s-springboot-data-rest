@@ -12,7 +12,7 @@ trigger:
 
 pool:
   name: Thane-Test
-  demands: maven
+ # demands: maven
 
 steps:
 - task: colinsalmcorner.colinsalmcorner-buildtasks.replace-tokens-task.ReplaceTokens@1
