@@ -19,6 +19,9 @@ steps:
     sourcePath: 'src/main/resources'
     filePattern: '*.properties'
     tokenRegex: '__(\w+[.\w+]*)__'
+
+
+
 - task: Maven@3
   inputs:
     mavenPomFile: 'pom.xml'
