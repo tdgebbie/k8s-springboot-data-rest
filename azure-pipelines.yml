@@ -11,7 +11,7 @@ trigger:
 - master
 
 pool:
-  name: Azure Pipelines
+  name: Thane-Test
   demands: maven
 
 steps:
