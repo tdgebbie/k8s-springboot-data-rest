@@ -22,11 +22,11 @@ steps:
     filePattern: '*.properties'
     tokenRegex: '__(\w+[.\w+]*)__'
 
-- task: Maven@3
-  displayName: 'Maven pom.xml'
-  inputs:
-    options: '-DskipITs'
-    testResultsFiles: '**/TEST-*.xml'
+#- task: Maven@3
+#  displayName: 'Maven pom.xml'
+#  inputs:
+#    options: '-DskipITs'
+#    testResultsFiles: '**/TEST-*.xml'
 
 - task: CopyFiles@2
   displayName: 'Copy Files to: $(build.artifactsstagngdirectory)'
