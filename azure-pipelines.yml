@@ -11,43 +11,46 @@ trigger:
 - master
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: Azure Pipelines
+  demands: maven
 
 steps:
-- task: replacetokens@3
+- task: colinsalmcorner.colinsalmcorner-buildtasks.replace-tokens-task.ReplaceTokens@1
+  displayName: 'Replace MySql service name and k8s namespace in Springboot config file'
   inputs:
-    rootDirectory: 'src/main/resources'
-    targetFiles: '*.properties'
-    encoding: 'auto'
-    writeBOM: true
-    actionOnMissing: 'warn'
-    keepToken: false
-    tokenPrefix: '#{'
-    tokenSuffix: '}#'
+    sourcePath: src/main/resources
+    filePattern: '*.properties'
+    tokenRegex: '__(\w+[.\w+]*)__'
 
 - task: Maven@3
+  displayName: 'Maven pom.xml'
   inputs:
-    mavenPomFile: 'pom.xml'
-    mavenOptions: '-Xmx3072m'
-    javaHomeOption: 'JDKVersion'
-    jdkVersionOption: '1.8'
-    jdkArchitectureOption: 'x64'
-    publishJUnitResults: true
-    testResultsFiles: '**/surefire-reports/TEST-*.xml'
-    goals: 'package'
+    options: '-DskipITs'
+    testResultsFiles: '**/TEST-*.xml'
 
 - task: CopyFiles@2
+  displayName: 'Copy Files to: $(build.artifactsstagngdirectory)'
   inputs:
     SourceFolder: '$(system.defaultworkingdirectory)'
     Contents: |
-      **/*.jar
-      **/*.yaml
-    TargetFolder: '$(build.artifactsstagingdirectory)'
+     **/*.jar
+     **/*.yaml
+    TargetFolder: '$(build.artifactsstagngdirectory)'
 
 - task: DockerCompose@0
+  displayName: 'Build container image'
   inputs:
-    containerregistrytype: 'Azure Container Registry'
     azureSubscription: 'DevOps(a76f26df-c81c-4fd6-b976-ba04f91c777a)'
     azureContainerRegistry: '{"loginServer":"nvpdevopsaks.azurecr.io", "id" : "/subscriptions/a76f26df-c81c-4fd6-b976-ba04f91c777a/resourceGroups/nvp-devops-aks-rg/providers/Microsoft.ContainerRegistry/registries/nvpdevopsaks"}'
-    dockerComposeFile: '**/docker-compose.yml'
-    action: 'Run a Docker Compose command'
+    action: 'Build services'
+    additionalImageTags: '$(Build.BuildNumber)'
+    includeLatestTag: true
+
+- task: DockerCompose@0
+  displayName: 'Push services'
+  inputs:
+    azureSubscription: 'DevOps(a76f26df-c81c-4fd6-b976-ba04f91c777a)'
+    azureContainerRegistry: '{"loginServer":"nvpdevopsaks.azurecr.io", "id" : "/subscriptions/a76f26df-c81c-4fd6-b976-ba04f91c777a/resourceGroups/nvp-devops-aks-rg/providers/Microsoft.ContainerRegistry/registries/nvpdevopsaks"}'
+    action: 'Push services'
+    additionalImageTags: '$(Build.BuildNumber)'
+    includeLatestTag: true
